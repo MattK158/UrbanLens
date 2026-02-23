@@ -30,7 +30,7 @@ class CrimeIncident(Base):
     __tablename__ = "crime_incidents"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(String(50), unique=True, nullable=False)
+    source_id = Column(String(200), unique=True, nullable=False)
     offense_type = Column(String(200))
     category = Column(String(100))
     severity = Column(String(50))
@@ -46,7 +46,7 @@ class ServiceRequest(Base):
     __tablename__ = "service_requests"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(String(50), unique=True, nullable=False)
+    source_id = Column(String(200), unique=True, nullable=False)
     complaint_type = Column(String(200))
     category = Column(String(100))
     location = Column(Geometry("POINT", srid=4326))
@@ -63,7 +63,7 @@ class BuildingPermit(Base):
     __tablename__ = "building_permits"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(String(50), unique=True, nullable=False)
+    source_id = Column(String(200), unique=True, nullable=False)
     permit_type = Column(String(200))
     work_type = Column(String(100))
     location = Column(Geometry("POINT", srid=4326))
@@ -79,7 +79,7 @@ class TrafficIncident(Base):
     __tablename__ = "traffic_incidents"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(String(50), unique=True, nullable=False)
+    source_id = Column(String(200), unique=True, nullable=False)
     incident_type = Column(String(200))
     location = Column(Geometry("POINT", srid=4326))
     neighborhood_id = Column(Integer, ForeignKey("neighborhoods.id"))
@@ -93,7 +93,7 @@ class EmsIncident(Base):
     __tablename__ = "ems_incidents"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_id = Column(String(50), unique=True, nullable=False)
+    source_id = Column(String(200), unique=True, nullable=False)
     problem_description = Column(String(200))
     location = Column(Geometry("POINT", srid=4326))
     neighborhood_id = Column(Integer, ForeignKey("neighborhoods.id"))
@@ -143,3 +143,11 @@ class IngestionLog(Base):
     records_rejected = Column(Integer)
     last_ingested_at = Column(DateTime)
     status = Column(String(20))
+
+
+class BlockGroupNeighborhood(Base):
+    __tablename__ = "block_group_neighborhood"
+
+    block_group_id = Column(String(20), primary_key=True)
+    neighborhood_id = Column(Integer, ForeignKey("neighborhoods.id"))
+    neighborhood_name = Column(String(100))
