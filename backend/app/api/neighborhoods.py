@@ -3,11 +3,22 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
 from app.models import Neighborhood, NeighborhoodScore
+from functools import lru_cache
+import json
 
 router = APIRouter()
+_neighborhoods_cache = None
+_cache_time = None
 
 @router.get("/neighborhoods")
 def get_all_neighborhoods(db: Session = Depends(get_db)):
+    global _neighborhoods_cache, _cache_time
+    from datetime import datetime, timezone, timedelta
+
+    now = datetime.now(timezone.utc)
+    if _neighborhoods_cache and _cache_time and (now - _cache_time) < timedelta(hours=1):
+        return _neighborhoods_cache
+    
     """Returns all neighborhoods with boundaries as GeoJSON and current scores."""
     neighborhoods = db.query(Neighborhood).all()
     
@@ -40,10 +51,10 @@ def get_all_neighborhoods(db: Session = Depends(get_db)):
             }
         })
 
-    return {
-        "type": "FeatureCollection",
-        "features": features
-    }
+    result = {"type": "FeatureCollection", "features": features}
+    _neighborhoods_cache = result
+    _cache_time = datetime.now(timezone.utc)
+    return result
 
 
 @router.get("/neighborhoods/{slug}")

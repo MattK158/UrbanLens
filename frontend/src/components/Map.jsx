@@ -160,9 +160,17 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
 
     if (map.current.loaded()) {
       loadData();
+      map.current.on('moveend', loadData);
     } else {
-      map.current.on('load', loadData);
+      map.current.on('load', () => {
+        loadData();
+        map.current.on('moveend', loadData);
+      });
     }
+
+    return () => {
+      map.current?.off('moveend', loadData);
+    };
   }, [activeDataset]);
 
   return (
