@@ -1,0 +1,1 @@
+from app.scoring.engine import compute_all_scores

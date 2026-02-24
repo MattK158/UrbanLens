@@ -3,13 +3,11 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from app.database import SessionLocal
-from app.ingestion.crime import ingest_crime
-
+from app.scoring.engine import compute_all_scores
 
 db = SessionLocal()
 try:
-    print("=== CRIME ===")
-    ingest_crime(db, max_pages=500)
-
+    compute_all_scores(db)
+    print("Done.")
 finally:
     db.close()

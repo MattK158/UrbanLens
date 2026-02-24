@@ -8,7 +8,7 @@ from sqlalchemy import text
 from app.models import CrimeIncident, IngestionLog
 from app.ingestion.client import fetch_incremental
 
-DATASET_ID = "hbc5-hmey"
+DATASET_ID = "fdj4-gpfu"
 DATE_FIELD = "occ_date"
 
 SEVERITY_MAP = {
@@ -64,7 +64,8 @@ def ingest_crime(db: Session, since: str = None, max_pages: int = 50):
     rejected = 0
 
     try:
-        for page in fetch_incremental(DATASET_ID, DATE_FIELD, since=since):
+        from app.ingestion.client import fetch_dataset
+        for page in fetch_dataset(DATASET_ID, order_by=f"{DATE_FIELD} DESC", max_pages=max_pages):
             for record in page:
                 try:
                     source_id = record.get("incident_report_number")
