@@ -8,14 +8,21 @@ from app.ingestion.traffic import ingest_traffic
 from app.ingestion.permits import ingest_permits
 from app.ingestion.code_complaints import ingest_code_complaints
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 load_dotenv()
+
+def get_since_date(db):
+    """Gets the most recent crime incident date to use as incremental cutoff."""
+    result = db.execute(text("SELECT MAX(occurred_at) FROM crime_incidents")).scalar()
+    return result.strftime('%Y-%m-%d') if result else None
 
 def ingest_all(since: str = None, max_pages: int = 500):
     """
     Runs all four dataset ingestors in sequence.
-    Pass since='2024-01-01' for incremental pulls.
-    Pass since=None for full historical load (first run only).
+    Pass since=None to auto-detect from database (recommended).
+    Pass since='2024-01-01' to override manually.
+    Pass max_pages=500 for full historical load (first run only).
     """
     print("=" * 50)
     print("UrbanLens Full Ingestion Pipeline")
@@ -25,6 +32,13 @@ def ingest_all(since: str = None, max_pages: int = 500):
     db = SessionLocal()
 
     try:
+        if since is None:
+            since = get_since_date(db)
+            if since:
+                print(f"\nAuto-detected since date: {since}")
+            else:
+                print("\nNo existing data — running full historical load")
+
         print("\n[1/4] Crime Incidents")
         ingested, rejected = ingest_crime(db, since=since, max_pages=max_pages)
         results["crime"] = {"ingested": ingested, "rejected": rejected}

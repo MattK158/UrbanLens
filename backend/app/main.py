@@ -20,7 +20,14 @@ def run_ingestion():
     print(f"[{datetime.now(timezone.utc)}] Starting scheduled ingestion...")
     db = SessionLocal()
     try:
-        since = "2026-01-01"  # Only pull recent records on scheduled runs
+        from sqlalchemy import text
+        result = db.execute(text("""
+            SELECT MAX(occurred_at) FROM crime_incidents
+        """)).scalar()
+        
+        since = result.strftime('%Y-%m-%d') if result else "2025-01-01"
+        print(f"Ingesting since: {since}")
+        
         ingest_crime(db, since=since, max_pages=10)
         ingest_traffic(db, since=since, max_pages=10)
         ingest_permits(db, since=since, max_pages=10)

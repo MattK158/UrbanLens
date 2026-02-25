@@ -14,11 +14,20 @@ const DATASET_COLORS = {
   code_complaints: '#3498db',
 };
 
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
 export default function Map({ onNeighborhoodClick, neighborhoods }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [activeDataset, setActiveDataset] = useState('crime');
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Initialize map
   useEffect(() => {
@@ -34,7 +43,6 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
-      // Add neighborhood boundaries layer
       map.current.addSource('neighborhoods', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
@@ -70,7 +78,6 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
         },
       });
 
-      // Click handler for neighborhoods
       map.current.on('click', 'neighborhoods-fill', (e) => {
         const props = e.features[0].properties;
         if (onNeighborhoodClick) onNeighborhoodClick(props.slug);
@@ -84,7 +91,6 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
         map.current.getCanvas().style.cursor = '';
       });
 
-      // Add incident points layer
       map.current.addSource('incidents', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
@@ -129,7 +135,7 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
       try {
         const bounds = map.current.getBounds();
         const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
-        
+
         const data = await getMapData(activeDataset, {
           bbox,
           start: '2025-01-01',
@@ -138,7 +144,6 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
         const source = map.current.getSource('incidents');
         if (source) source.setData(data);
 
-        // Update heatmap color based on dataset
         if (map.current.getLayer('incidents-heat')) {
           map.current.setPaintProperty(
             'incidents-heat',
@@ -153,6 +158,8 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
             ]
           );
         }
+
+        setLastUpdated(new Date().toLocaleTimeString());
       } catch (err) {
         console.error('Error loading map data:', err);
       } finally {
@@ -160,18 +167,20 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
       }
     };
 
+    const debouncedLoad = debounce(loadData, 500);
+
     if (map.current.loaded()) {
       loadData();
-      map.current.on('moveend', loadData);
+      map.current.on('moveend', debouncedLoad);
     } else {
       map.current.on('load', () => {
         loadData();
-        map.current.on('moveend', loadData);
+        map.current.on('moveend', debouncedLoad);
       });
     }
 
     return () => {
-      map.current?.off('moveend', loadData);
+      map.current?.off('moveend', debouncedLoad);
     };
   }, [activeDataset]);
 
@@ -212,6 +221,25 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
         ))}
       </div>
 
+      {/* Crime overlay notice */}
+      {activeDataset === 'crime' && (
+        <div style={{
+          position: 'absolute',
+          top: 220,
+          left: 16,
+          background: 'rgba(0,0,0,0.8)',
+          borderRadius: 6,
+          padding: '6px 10px',
+          fontSize: 10,
+          color: '#e74c3c',
+          zIndex: 1,
+          maxWidth: 140,
+          lineHeight: 1.4,
+        }}>
+          ⓘ Crime shown as neighborhood color overlay
+        </div>
+      )}
+
       {loading && (
         <div style={{
           position: 'absolute',
@@ -228,36 +256,53 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
         </div>
       )}
 
-    {/* Legend */}
-    <div style={{
-      position: 'absolute',
-      bottom: 32,
-      left: 16,
-      background: 'rgba(0,0,0,0.8)',
-      borderRadius: 8,
-      padding: '10px 14px',
-      zIndex: 1,
-      fontSize: 11,
-      color: '#fff',
-    }}>
-      <div style={{ marginBottom: 6, fontWeight: 'bold', color: '#ccc' }}>Neighborhood Score</div>
-      {[
-        { color: '#2ecc71', label: 'High (75-100)' },
-        { color: '#f39c12', label: 'Medium (25-75)' },
-        { color: '#e74c3c', label: 'Low (0-25)' },
-        { color: '#222', label: 'No data', border: '1px solid #555' },
-      ].map(item => (
-        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <div style={{
-            width: 12, height: 12, borderRadius: 2,
-            background: item.color,
-            border: item.border || 'none',
-            flexShrink: 0,
-          }} />
-          <span style={{ color: '#ccc' }}>{item.label}</span>
+      {/* Legend */}
+      <div style={{
+        position: 'absolute',
+        bottom: 32,
+        left: 16,
+        background: 'rgba(0,0,0,0.8)',
+        borderRadius: 8,
+        padding: '10px 14px',
+        zIndex: 1,
+        fontSize: 11,
+        color: '#fff',
+      }}>
+        <div style={{ marginBottom: 6, fontWeight: 'bold', color: '#ccc' }}>Neighborhood Score</div>
+        {[
+          { color: '#2ecc71', label: 'High (75-100)' },
+          { color: '#f39c12', label: 'Medium (25-75)' },
+          { color: '#e74c3c', label: 'Low (0-25)' },
+          { color: '#222', label: 'No data', border: '1px solid #555' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{
+              width: 12, height: 12, borderRadius: 2,
+              background: item.color,
+              border: item.border || 'none',
+              flexShrink: 0,
+            }} />
+            <span style={{ color: '#ccc' }}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Last updated */}
+      {lastUpdated && (
+        <div style={{
+          position: 'absolute',
+          bottom: 32,
+          right: 16,
+          background: 'rgba(0,0,0,0.7)',
+          borderRadius: 6,
+          padding: '4px 10px',
+          fontSize: 10,
+          color: '#666',
+          zIndex: 1,
+        }}>
+          Updated {lastUpdated}
         </div>
-      ))}
-    </div>  
+      )}
     </div>
   );
 }

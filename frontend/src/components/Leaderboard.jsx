@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getScores } from '../api/client';
 
-export default function Leaderboard({ onNeighborhoodClick }) {
+export default function Leaderboard({ onNeighborhoodClick, hidden }) {
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('top'); // 'top' or 'bottom'
@@ -12,6 +12,8 @@ export default function Leaderboard({ onNeighborhoodClick }) {
       setLoading(false);
     });
   }, []);
+
+  if (hidden) return null;
 
   const displayed = view === 'top' ? scores.slice(0, 10) : scores.slice(-10).reverse();
 

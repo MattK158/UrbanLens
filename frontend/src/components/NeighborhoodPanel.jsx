@@ -38,11 +38,12 @@ export default function NeighborhoodPanel({ slug, onClose, onCompare }) {
               <button
                 onClick={() => onCompare && onCompare(slug)}
                 style={{
-                  background: '#333', border: 'none', color: '#fff',
-                  fontSize: 11, cursor: 'pointer', padding: '4px 8px', borderRadius: 4
+                  background: '#f39c12', border: 'none', color: '#000',
+                  fontSize: 11, cursor: 'pointer', padding: '4px 8px', borderRadius: 4,
+                  fontWeight: 'bold',
                 }}
               >
-                Compare
+                + Compare
               </button>
               <button onClick={onClose} style={{
                 background: 'none', border: 'none', color: '#fff',
