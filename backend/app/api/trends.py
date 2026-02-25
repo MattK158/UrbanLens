@@ -43,7 +43,7 @@ def get_trends(
             EXTRACT(MONTH FROM {date_field}) as month,
             COUNT(*) as count
         FROM {table}
-        WHERE {date_field} >= NOW() - INTERVAL ':months months'
+        WHERE {date_field} >= NOW() - (:months * INTERVAL '1 month')
         {neighborhood_filter}
         GROUP BY year, month
         ORDER BY year, month

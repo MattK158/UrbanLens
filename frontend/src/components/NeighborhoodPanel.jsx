@@ -3,7 +3,7 @@ import { getNeighborhood } from '../api/client';
 import ScoreCard from './ScoreCard';
 import TrendChart from './TrendChart';
 
-export default function NeighborhoodPanel({ slug, onClose }) {
+export default function NeighborhoodPanel({ slug, onClose, onCompare }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,29 +19,40 @@ export default function NeighborhoodPanel({ slug, onClose }) {
   if (!slug) return null;
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      width: 320,
-      height: '100%',
-      background: '#1a1a1a',
-      color: '#fff',
-      overflowY: 'auto',
-      zIndex: 10,
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.5)',
-    }}>
-      <div style={{ padding: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18 }}>{loading ? '...' : data?.name}</h2>
-          <button onClick={onClose} style={{
-            background: 'none', border: 'none', color: '#fff',
-            fontSize: 20, cursor: 'pointer'
-          }}>×</button>
-        </div>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 320,
+        height: '100%',
+        background: '#1a1a1a',
+        color: '#fff',
+        overflowY: 'auto',
+        zIndex: 10,
+        boxShadow: '-4px 0 20px rgba(0,0,0,0.5)',
+      }}>
+        <div style={{ padding: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ margin: 0, fontSize: 18 }}>{loading ? '...' : data?.name}</h2>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={() => onCompare && onCompare(slug)}
+                style={{
+                  background: '#333', border: 'none', color: '#fff',
+                  fontSize: 11, cursor: 'pointer', padding: '4px 8px', borderRadius: 4
+                }}
+              >
+                Compare
+              </button>
+              <button onClick={onClose} style={{
+                background: 'none', border: 'none', color: '#fff',
+                fontSize: 20, cursor: 'pointer'
+              }}>×</button>
+            </div>
+          </div>
 
         {loading ? (
-          <p style={{ color: '#666' }}>Loading...</p>
+          <p style={{ color: '#667' }}>Loading...</p>
         ) : data ? (
           <>
             {/* Rank */}

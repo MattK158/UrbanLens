@@ -227,6 +227,37 @@ export default function Map({ onNeighborhoodClick, neighborhoods }) {
           Loading data...
         </div>
       )}
+
+    {/* Legend */}
+    <div style={{
+      position: 'absolute',
+      bottom: 32,
+      left: 16,
+      background: 'rgba(0,0,0,0.8)',
+      borderRadius: 8,
+      padding: '10px 14px',
+      zIndex: 1,
+      fontSize: 11,
+      color: '#fff',
+    }}>
+      <div style={{ marginBottom: 6, fontWeight: 'bold', color: '#ccc' }}>Neighborhood Score</div>
+      {[
+        { color: '#2ecc71', label: 'High (75-100)' },
+        { color: '#f39c12', label: 'Medium (25-75)' },
+        { color: '#e74c3c', label: 'Low (0-25)' },
+        { color: '#222', label: 'No data', border: '1px solid #555' },
+      ].map(item => (
+        <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{
+            width: 12, height: 12, borderRadius: 2,
+            background: item.color,
+            border: item.border || 'none',
+            flexShrink: 0,
+          }} />
+          <span style={{ color: '#ccc' }}>{item.label}</span>
+        </div>
+      ))}
+    </div>  
     </div>
   );
 }
