@@ -148,7 +148,7 @@ A small indicator in the UI showing when each dataset was last refreshed from th
 └──────────┼─────────────────┼──────────────────┼────────┘
            │                 │                  │
 ┌──────────▼─────────────────▼──────────────────▼────────┐
-│               PostgreSQL + PostGIS (AWS RDS)            │
+│               PostgreSQL + PostGIS (EC2-hosted PostgreSQL)            │
 │                                                         │
 │   incidents │ permits │ ems │ traffic │ neighborhoods   │
 │   scores    │ ingestion_log │ aggregates                │
@@ -170,7 +170,7 @@ A small indicator in the UI showing when each dataset was last refreshed from th
 
 **APScheduler** — Lightweight Python job scheduler embedded in the FastAPI application. Triggers data ingestion every 6 hours and score recomputation immediately after.
 
-**PostgreSQL + PostGIS** — Primary data store. PostGIS extension enables native geospatial queries — point-in-polygon lookups to assign incidents to neighborhoods, radius queries, bounding box filters. Hosted on AWS RDS for managed backups and reliability.
+**PostgreSQL + PostGIS** — Primary data store. PostGIS extension enables native geospatial queries — point-in-polygon lookups to assign incidents to neighborhoods, radius queries, bounding box filters. Hosted on EC2-hosted PostgreSQL for managed backups and reliability.
 
 **Austin Open Data Portal** — The Socrata-based open data API provided by the City of Austin. All datasets are accessed via the SODA (Socrata Open Data API) REST interface with incremental pulls using date filters to avoid re-ingesting historical data on every run.
 
@@ -563,35 +563,18 @@ Mapbox was chosen over Leaflet for its native support for large point datasets v
 ## 12. Deployment Architecture
 
 ```
-                    Route 53 (DNS)
-                         │
-                    CloudFront CDN
-                    (static assets)
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-         S3 Bucket             EC2 Instance
-         (React build)         (FastAPI app)
-                               │
-                            Nginx
-                            (reverse proxy)
-                               │
-                           Uvicorn
-                           (ASGI server)
-                               │
-                          FastAPI app
-                               │
-                          RDS PostgreSQL
-                          (PostGIS enabled)
+EC2 Instance (t3.small, Ubuntu 22.04)
+  └── Nginx (reverse proxy, SSL termination)
+       └── Uvicorn (ASGI server)
+            └── FastAPI app
+                 └── PostgreSQL + PostGIS (EC2-hosted)
+
 ```
 
-**EC2:** t3.small instance running Ubuntu 24. Nginx as reverse proxy, Uvicorn serving the FastAPI application. APScheduler runs within the FastAPI process and triggers ingestion jobs every 6 hours.
-
-**RDS:** PostgreSQL 15 with PostGIS extension. db.t3.micro for MVP — sufficient for read-heavy workload with proper indexing. Automated daily backups enabled.
-
-**S3 + CloudFront:** React build artifacts deployed to S3, served via CloudFront for low-latency global delivery and HTTPS termination.
-
-**Environment Variables:** All secrets (database URL, Mapbox token) stored as environment variables on EC2, never committed to the repository.
+**Domain**: urbanlensatx.com via Namecheap DNS → EC2 public IP
+**SSL**: Let's Encrypt via Certbot (auto-renewing)
+**Process management**: systemd (auto-restart on crash/reboot)
+**Scheduled ingestion**: APScheduler embedded in FastAPI (every 6 hours)
 
 ---
 

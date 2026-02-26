@@ -6,7 +6,7 @@ UrbanLens is a full-stack urban data platform that transforms millions of raw Ci
 
 Built for current residents who want to understand their city, and prospective residents who want to know where to live.
 
-**[Live Demo →](https://urbanlens.io)** &nbsp;|&nbsp; **[Technical Design Document →](./DESIGN.md)**
+**[Live Demo →](https://urbanlensatx.com)** &nbsp;|&nbsp; **[Technical Design Document →](./DESIGN.md)**
 
 ---
 
@@ -33,7 +33,7 @@ Built for current residents who want to understand their city, and prospective r
 | Frontend | React, Mapbox GL JS (react-map-gl), Recharts |
 | Backend | Python 3.11, FastAPI, SQLAlchemy, APScheduler |
 | Database | PostgreSQL 15 + PostGIS |
-| Deployment | AWS EC2, AWS RDS, AWS S3, CloudFront, Nginx |
+| Deployment | AWS EC2, PostgreSQL (EC2-hosted), Nginx, Let's Encrypt SSL |
 | Data Source | City of Austin Open Data Portal (Socrata API) |
 
 ---
@@ -58,11 +58,10 @@ All data is sourced from the [City of Austin Open Data Portal](https://data.aust
 
 | Dataset | Records | Refresh |
 |---|---|---|
-| 311 Unified Service Requests | 2M+ | Daily |
-| Crime Reports | 500K+ | Weekly |
-| Building Permits | 300K+ | Daily |
-| Traffic Incidents | 1M+ | Daily |
-| EMS Incident Responses | 400K+ | Monthly |
+| Crime Reports | 500K+ | 6 hours |
+| Building Permits | 401k+ | 6 hours |
+| Traffic Incidents | 420k+ | 6 hours |
+| 311 Service Requests | 500K+ | 6 hours |
 
 ---
 
